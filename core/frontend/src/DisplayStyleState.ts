@@ -6,7 +6,7 @@
  * @module Views
  */
 import { assert, Id64, Id64String, JsonUtils } from "@bentley/bentleyjs-core";
-import { Angle, Point3d, Range1d, Vector3d } from "@bentley/geometry-core";
+import { Angle, Point3d, Range1d, Transform, Vector3d } from "@bentley/geometry-core";
 import {
   BackgroundMapProps, BackgroundMapSettings, BaseLayerSettings, calculateSolarDirection, Cartographic, ColorDef, ContextRealityModelProps,
   DisplayStyle3dSettings, DisplayStyle3dSettingsProps, DisplayStyleProps, DisplayStyleSettings, EnvironmentProps, FeatureAppearance, GlobeMode,
@@ -681,7 +681,7 @@ export abstract class DisplayStyleState extends ElementState implements DisplayS
   public set monochromeColor(val: ColorDef) { this.settings.monochromeColor = val; }
 
   private _backgroundMapGeometry?: {
-    bimElevationBias: number;
+    ecefToDb: Transform;
     geometry: BackgroundMapGeometry;
     globeMode: GlobeMode;
   };
@@ -719,11 +719,12 @@ export abstract class DisplayStyleState extends ElementState implements DisplayS
       return undefined;
 
     const bimElevationBias = this.backgroundMapElevationBias;
+    const ecefToDb = this.iModel.backgroundMapLocation.getMapEcefToDb(bimElevationBias);
 
     const globeMode = this.globeMode;
-    if (undefined === this._backgroundMapGeometry || this._backgroundMapGeometry.globeMode !== globeMode || this._backgroundMapGeometry.bimElevationBias !== bimElevationBias) {
+    if (undefined === this._backgroundMapGeometry || this._backgroundMapGeometry.globeMode !== globeMode || !this._backgroundMapGeometry.ecefToDb.isAlmostEqual(ecefToDb)) {
       const geometry = new BackgroundMapGeometry(bimElevationBias, globeMode, this.iModel);
-      this._backgroundMapGeometry = { bimElevationBias, geometry, globeMode };
+      this._backgroundMapGeometry = { ecefToDb, geometry, globeMode };
     }
     return this._backgroundMapGeometry.geometry;
   }
