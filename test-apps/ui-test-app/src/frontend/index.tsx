@@ -592,8 +592,8 @@ class SampleAppViewer extends React.Component<any, { authorized: boolean, uiSett
     return authorized ? SampleAppIModelApp.showSignedIn() : SampleAppIModelApp.showSignedOut();
   };
 
-  private _onUserStateChanged = (_accessToken: AccessToken | undefined) => {
-    const authorized = !!IModelApp.authorizationClient && IModelApp.authorizationClient.isAuthorized;
+  private _onUserStateChanged = (accessToken: AccessToken | undefined) => {
+    const authorized = accessToken !== undefined;
     this.setState({ authorized, uiSettings: this.getUiSettings(authorized) });
     this._initializeSignin(authorized); // eslint-disable-line @typescript-eslint/no-floating-promises
   };

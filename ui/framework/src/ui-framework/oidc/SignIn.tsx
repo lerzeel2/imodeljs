@@ -36,43 +36,31 @@ export interface SignInProps extends CommonProps {
  * @public
  */
 export class SignIn extends React.PureComponent<SignInProps> {
-  /** Oidc Frontend Client object */
-  private _oidcClient: FrontendAuthorizationClient | undefined;
+  private _removeListener?: () => void;
 
   constructor(props: SignInProps) {
     super(props);
   }
 
   public componentDidMount() {
-    const oidcClient = IModelApp.authorizationClient;
-    // istanbul ignore if
-    if (isFrontendAuthorizationClient(oidcClient))
-      this._oidcClient = oidcClient;
-
-    // istanbul ignore next
-    const isAuthorized = this._oidcClient && this._oidcClient.isAuthorized;
-    // istanbul ignore if
-    if (isAuthorized)
-      this._oidcClient!.onUserStateChanged.addListener(this._onUserStateChanged);
+    this._removeListener = IModelApp.authorizationClient?.onUserStateChanged.addListener(this._onUserStateChanged);
   }
 
   // istanbul ignore next
   private _onUserStateChanged() {
     // istanbul ignore next
-    if (this._oidcClient && this._oidcClient.isAuthorized && this.props.onSignedIn)
+    if (IModelApp.authorizationClient?.isAuthorized && this.props.onSignedIn)
       this.props.onSignedIn();
   }
 
   public componentWillUnmount() {
     // istanbul ignore next
-    if (this._oidcClient)
-      this._oidcClient.onUserStateChanged.removeListener(this._onUserStateChanged);
+    if (this._removeListener)
+      IModelApp.authorizationClient?.onUserStateChanged.removeListener(this._onUserStateChanged);
   }
 
   private _onStartSignin = async () => {
-    // istanbul ignore next
-    if (this._oidcClient)
-      this._oidcClient.signIn(new ClientRequestContext()); // eslint-disable-line @typescript-eslint/no-floating-promises
+    IModelApp.authorizationClient?.signIn(new ClientRequestContext()); // eslint-disable-line @typescript-eslint/no-floating-promises
 
     // istanbul ignore else
     if (this.props.onStartSignIn)
